@@ -1,0 +1,819 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>妊活体質問診票</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700&family=BIZ+UDPGothic:wght@400;700&display=swap">
+<style>
+/* Layout: 1画面1セクションのタブレット向け問診。受付 → 質問5画面 → 施術者の確認 → 患者さん向けの結果 */
+:root {
+  --bg: #f3f5f2;
+  --surface: #ffffff;
+  --ink: #23302d;
+  --muted: #5d6b67;
+  --line: #d8dfdb;
+  --accent: #7a3e62;
+  --accent-soft: #f3e7ee;
+  --on-accent: #ffffff;
+  --staff: #2f5d6e;
+  --staff-soft: #e4eef1;
+  --A: #b7791f; --B: #2b7a8c; --C: #b8506a; --D: #4f8a3c; --E: #6b56a8; --K: #44546a;
+  /* 月経周期の4期。05_資料/画像/src/03_cycle.html と同じ色 */
+  --p1: #d9577a; --p2: #e98aa3; --p3: #f0a95b; --p4: #e8a917; --p-ink: #ffffff; --p-soft: #fbeef2;
+  --font-display: "Zen Maru Gothic", "Hiragino Maru Gothic ProN", "Yu Gothic", sans-serif;
+  --font-body: "BIZ UDPGothic", "Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif;
+  --radius: 14px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #171d1c; --surface: #212927; --ink: #e8eeeb; --muted: #a3b0ac; --line: #35403d;
+    --accent: #d99abd; --accent-soft: #3a2a33; --on-accent: #22161d;
+    --staff: #8cc4d6; --staff-soft: #22343a;
+    --A: #e0a85a; --B: #6cc0d2; --C: #e88aa0; --D: #8fc77a; --E: #a996e0; --K: #a8b6c8;
+    --p1: #e5708f; --p2: #eb9cb1; --p3: #f2b673; --p4: #e9b638; --p-ink: #2a1a20; --p-soft: #33252b;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #171d1c; --surface: #212927; --ink: #e8eeeb; --muted: #a3b0ac; --line: #35403d;
+  --accent: #d99abd; --accent-soft: #3a2a33; --on-accent: #22161d;
+  --staff: #8cc4d6; --staff-soft: #22343a;
+  --A: #e0a85a; --B: #6cc0d2; --C: #e88aa0; --D: #8fc77a; --E: #a996e0; --K: #a8b6c8;
+  --p1: #e5708f; --p2: #eb9cb1; --p3: #f2b673; --p4: #e9b638; --p-ink: #2a1a20; --p-soft: #33252b;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font-family: var(--font-body); font-size: 17px; line-height: 1.7;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+.wrap { max-width: 760px; margin: 0 auto; padding-block: 20px 120px; display: flex; flex-direction: column; gap: 20px; }
+.stack { display: flex; flex-direction: column; gap: 20px; }
+
+header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); padding-block: 12px 10px; display: flex; flex-direction: column; gap: 10px; }
+.brand { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.brand h1 { font-family: var(--font-display); font-weight: 700; font-size: 1.3rem; margin: 0; letter-spacing: .04em; }
+.brand .step { color: var(--muted); font-size: .9rem; font-variant-numeric: tabular-nums; }
+.progress { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; }
+.progress span { height: 6px; border-radius: 3px; background: var(--line); }
+.progress span.done { background: var(--accent); }
+
+h2 { font-family: var(--font-display); font-weight: 700; font-size: 1.6rem; line-height: 1.4; margin: 0; text-wrap: balance; }
+h3 { font-family: var(--font-display); font-weight: 700; font-size: 1.2rem; line-height: 1.4; margin: 0; }
+.lead { color: var(--muted); margin: 0; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.panel p { margin: 0; }
+
+/* 受付・施術者入力 */
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field label, .field .label { font-weight: 700; font-size: .95rem; }
+.field .opt { color: var(--muted); font-weight: 400; font-size: .85rem; margin-left: 6px; }
+input[type="text"], input[type="date"], input[type="number"], textarea {
+  font: inherit; font-size: 1.02rem; padding: 12px 14px; border-radius: 10px;
+  border: 1px solid var(--line); background: var(--bg); color: var(--ink); width: 100%; min-height: 52px;
+}
+textarea { line-height: 1.6; resize: vertical; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 520px) { .row2 { grid-template-columns: 1fr; } }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  font: inherit; font-size: .98rem; padding: 10px 16px; min-height: 48px; border-radius: 999px;
+  border: 1px solid var(--line); background: var(--bg); color: var(--ink); cursor: pointer;
+}
+.chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 700; }
+.staff-screen .chip[aria-pressed="true"] { background: var(--staff); border-color: var(--staff); }
+
+/* 設問 */
+.howto { background: var(--accent-soft); border-radius: var(--radius); padding: 14px 18px; margin: 0; font-size: .95rem; }
+.qs { display: flex; flex-direction: column; gap: 10px; }
+.q {
+  display: flex; align-items: center; gap: 16px; width: 100%; text-align: left;
+  font: inherit; font-size: 1.08rem; line-height: 1.55; color: var(--ink);
+  background: var(--surface); border: 1.5px solid var(--line); border-radius: var(--radius);
+  padding: 14px 18px; min-height: 68px; cursor: pointer;
+  transition: border-color .15s, background .15s;
+}
+.q .box {
+  flex: none; width: 34px; height: 34px; border-radius: 10px; border: 2px solid var(--line);
+  display: grid; place-items: center; transition: background .15s, border-color .15s;
+}
+.q .box svg { width: 20px; height: 20px; opacity: 0; transition: opacity .15s; }
+.q[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
+.q[aria-pressed="true"] .box { background: var(--accent); border-color: var(--accent); }
+.q[aria-pressed="true"] .box svg { opacity: 1; }
+.q .txt { min-width: 0; }
+.count-note { color: var(--muted); font-size: .9rem; text-align: right; font-variant-numeric: tabular-nums; margin: 0; }
+
+/* 下のナビ */
+nav.bar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 6;
+  background: var(--surface); border-top: 1px solid var(--line);
+  padding-top: 12px;
+  padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+nav.bar .in { max-width: 760px; margin: 0 auto; display: flex; gap: 12px; }
+.btn {
+  font: inherit; font-weight: 700; font-size: 1.05rem; min-height: 56px; padding: 0 22px;
+  border-radius: 12px; border: 1.5px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer;
+}
+.btn.primary { flex: 1; background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.btn:disabled { opacity: .4; cursor: default; }
+button:focus-visible, input:focus-visible, textarea:focus-visible, summary:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+/* 施術者の確認画面 */
+.staff-banner { background: var(--staff-soft); color: var(--ink); border-left: 5px solid var(--staff); border-radius: 0 var(--radius) var(--radius) 0; padding: 14px 18px; display: flex; flex-direction: column; gap: 4px; }
+.staff-banner strong { color: var(--staff); letter-spacing: .06em; font-size: .85rem; }
+.staff-screen .eyebrow { color: var(--staff); }
+
+/* 結果 */
+.result-head { display: flex; flex-direction: column; gap: 6px; }
+.eyebrow { font-size: .8rem; letter-spacing: .12em; color: var(--muted); font-weight: 700; }
+.sho-card { border: 1.5px solid var(--line); border-top: 6px solid var(--tc); border-radius: var(--radius); background: var(--surface); padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+.sho-card .role { font-size: .8rem; font-weight: 700; color: var(--tc); letter-spacing: .08em; }
+.sho-card .term { font-family: var(--font-display); font-weight: 700; font-size: 1.9rem; line-height: 1.3; }
+.sho-card .term small { font-size: 1rem; color: var(--muted); font-weight: 500; margin-left: 8px; }
+.sho-card .yomi { color: var(--muted); font-size: .9rem; margin-top: -6px; }
+.sho-card p { margin: 0; }
+.strength { background: var(--bg); border-radius: 10px; padding: 10px 14px; font-size: .95rem; }
+.strength b { color: var(--tc); }
+.sub-line { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; border: 1px dashed var(--line); border-radius: 10px; padding: 10px 14px; }
+.sub-line .tag { font-size: .78rem; font-weight: 700; color: var(--tc); letter-spacing: .08em; }
+.sub-line .t { font-weight: 700; }
+
+.bars { display: flex; flex-direction: column; gap: 10px; }
+.bar-row { display: grid; grid-template-columns: 8.5em 1fr 3.2em; gap: 12px; align-items: center; font-size: .92rem; }
+.bar-row .lbl { min-width: 0; }
+.bar-row .track { height: 14px; background: var(--bg); border-radius: 7px; overflow: hidden; border: 1px solid var(--line); }
+.bar-row .fill { height: 100%; background: var(--tc); border-radius: 7px; }
+.bar-row .n { text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; }
+@media (max-width: 520px) { .bar-row { grid-template-columns: 7em 1fr 3em; font-size: .85rem; } }
+
+.plan-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+.plan-item { background: var(--bg); border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 2px; }
+.plan-item .k { font-size: .8rem; color: var(--muted); font-weight: 700; letter-spacing: .06em; }
+.plan-item .v { font-family: var(--font-display); font-weight: 700; font-size: 1.25rem; }
+.pre { white-space: pre-wrap; }
+.points { display: flex; flex-wrap: wrap; gap: 8px; }
+.points span { border: 1px solid var(--line); border-radius: 999px; padding: 4px 12px; font-size: .92rem; background: var(--bg); }
+
+.advice { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.adv { border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; background: var(--surface); }
+.adv .h { font-weight: 700; font-size: .95rem; display: flex; align-items: center; gap: 8px; }
+.adv .h::before { content: ""; width: 10px; height: 10px; border-radius: 3px; background: var(--hc, var(--accent)); flex: none; }
+.adv ul { margin: 0; padding-left: 1.1em; display: flex; flex-direction: column; gap: 4px; font-size: .95rem; }
+.adv p { font-size: .95rem; }
+.comment { font-family: var(--font-display); font-size: 1.05rem; line-height: 1.8; border-left: 4px solid var(--accent); padding-left: 14px; }
+/* 月経周期 */
+.cycle-top { display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); gap: 20px; align-items: center; }
+@media (max-width: 620px) { .cycle-top { grid-template-columns: 1fr; justify-items: center; } }
+.ring { width: 100%; max-width: 300px; height: auto; display: block; }
+.ring text { font-family: var(--font-body); }
+.cycle-bar { display: flex; flex-direction: column; gap: 6px; width: 100%; min-width: 0; }
+.cycle-bar .seg { display: grid; grid-template-columns: 7fr 6fr 2fr 13fr; height: 40px; border-radius: 999px; overflow: hidden; font-size: .85rem; font-weight: 700; color: var(--p-ink); }
+.cycle-bar .seg div { display: flex; align-items: center; justify-content: center; white-space: nowrap; overflow: hidden; }
+.cycle-bar .temp { display: grid; grid-template-columns: 13fr 2fr 13fr; font-size: .78rem; color: var(--muted); text-align: center; }
+.cycle-bar p { margin: 4px 0 0; }
+.phases { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 860px) { .phases { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 460px) { .phases { grid-template-columns: 1fr; } }
+.ph { border: 1px solid var(--line); border-top: 6px solid var(--pc); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 8px; background: var(--surface); }
+.ph .nm { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.ph .nm b { font-family: var(--font-display); font-size: 1.15rem; }
+.ph .nm span { font-size: .8rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.ph .th { align-self: flex-start; background: var(--pc); color: var(--p-ink); border-radius: 999px; padding: 2px 14px; font-weight: 700; font-size: .95rem; }
+.ph dl { margin: 0; display: flex; flex-direction: column; gap: 6px; font-size: .9rem; line-height: 1.6; }
+.ph dt { font-size: .75rem; font-weight: 700; color: var(--muted); letter-spacing: .06em; }
+.ph dd { margin: 0; }
+.ph .msg { margin-top: auto; background: var(--p-soft); border-radius: 10px; padding: 8px 10px; font-weight: 700; font-size: .9rem; text-align: center; }
+.believe { background: var(--p-soft); border-radius: var(--radius); padding: 22px 24px; display: flex; flex-direction: column; gap: 10px; }
+.believe p { margin: 0; font-family: var(--font-display); font-size: 1.12rem; line-height: 1.95; }
+.believe .last { font-weight: 700; }
+.notice { border-left: 4px solid var(--accent); background: var(--accent-soft); padding: 12px 16px; border-radius: 0 10px 10px 0; font-size: .95rem; margin: 0; }
+.small { font-size: .85rem; color: var(--muted); margin: 0; }
+
+.staff summary { cursor: pointer; font-weight: 700; min-height: 44px; display: flex; align-items: center; }
+.staff pre {
+  white-space: pre-wrap; word-break: break-word; font-family: var(--font-body); font-size: .92rem;
+  background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 14px; margin: 0;
+}
+.copy-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.copied { color: var(--D); font-weight: 700; font-size: .9rem; }
+
+/* 次の方へ の確認 */
+.confirm { position: fixed; inset: 0; z-index: 20; background: rgba(20, 26, 25, .45); display: grid; place-items: center; padding: 16px; }
+.confirm .box2 { background: var(--surface); color: var(--ink); border-radius: var(--radius); padding: 24px; max-width: 420px; width: 100%; display: flex; flex-direction: column; gap: 16px; }
+.confirm .acts { display: flex; gap: 12px; }
+.confirm .acts .btn { flex: 1; }
+
+.out-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+.staff-pre {
+  white-space: pre-wrap; word-break: break-word; font-family: var(--font-body); font-size: .9rem;
+  background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 14px; margin: 0;
+}
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+/* 印刷: 患者さん向けの結果だけを、明るい配色で A4 に出す */
+@media print {
+  :root:root:root {
+    --bg: #ffffff; --surface: #ffffff; --ink: #23302d; --muted: #5d6b67; --line: #d8dfdb;
+    --accent: #7a3e62; --accent-soft: #f3e7ee; --on-accent: #ffffff;
+    --A: #b7791f; --B: #2b7a8c; --C: #b8506a; --D: #4f8a3c; --E: #6b56a8; --K: #44546a;
+    --p1: #d9577a; --p2: #e98aa3; --p3: #f0a95b; --p4: #e8a917; --p-ink: #ffffff; --p-soft: #fbeef2;
+    color-scheme: light;
+  }
+  @page { size: A4; margin: 12mm; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { font-size: 11pt; padding: 0; }
+  body::before, header.top, nav.bar, .no-print, details.staff, .confirm { display: none !important; }
+  .wrap { max-width: none; padding: 0; }
+  .panel, .sho-card, .ph, .adv, .believe { break-inside: avoid; }
+  .phases { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .advice { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .cycle-top { grid-template-columns: 220px minmax(0, 1fr); }
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <h1>妊活体質問診票</h1>
+      <span class="step" id="stepLabel"></span>
+    </div>
+    <div class="progress" id="progress" aria-hidden="true"></div>
+  </header>
+  <main id="screen"></main>
+</div>
+
+<nav class="bar" aria-label="ページ移動">
+  <div class="in">
+    <button class="btn" id="backBtn" type="button">もどる</button>
+    <button class="btn primary" id="nextBtn" type="button">はじめる</button>
+  </div>
+</nav>
+
+<div class="confirm" id="confirm" hidden role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+  <div class="box2">
+    <h2 id="confirmTitle" style="font-size:1.25rem">入力内容を消して、次の方へ進みますか？</h2>
+    <p class="small">この問診票はデータを保存しません。消すと元に戻せないので、必要な内容はカルテに書き写してから進んでください。</p>
+    <div class="acts">
+      <button class="btn" id="cancelReset" type="button">やめる</button>
+      <button class="btn primary" id="doReset" type="button">消して次の方へ</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const CHECK_SVG = '<svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4 10.5l4 4 8-9" stroke="var(--on-accent)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+// 設問の前半6問は 05_資料/001_資料_体質チェック表.md と同じ。院内用に各4問を追加して10問にしている
+const SECTIONS = [
+  { key: "A", theme: "おなかと冷えのこと", term: "気虚", termSub: "脾気虚", yomi: "ききょ／ひききょ", nick: "ひえ・胃腸よわよわさん", group: "足りない",
+    state: "食べたものから気（からだを動かすエネルギー）をつくる「脾」の働きが弱り、気が不足している状態です。疲れやすさや冷え、胃腸の不調として表れやすく、気が足りないとからだを温める力も落ちやすくなります。",
+    strength: "やさしく周りを気づかえて、コツコツ続けられる力があります。",
+    policy: "補気健脾（ほきけんぴ）：胃腸（脾）の働きを助けて、気をつくる力を補う施術を行います。お腹と足元を温めるお灸も取り入れます。",
+    points: ["足三里", "中脘", "気海"],
+    food: ["かぼちゃ・さつまいも・山芋", "お米・もち米", "鶏肉・鮭", "しょうが・ねぎ（温める薬味）"],
+    living: ["腹巻きや湯たんぽでお腹を温める", "ゆったりウォーキングやヨガ", "食事の時間をそろえる"],
+    less: ["冷たい飲み物・生野菜のとり過ぎ", "汗だくになる激しい運動", "食後すぐに動くこと"],
+    mind: "「がんばらない運動」で十分です。続けられている自分をほめてあげてください。",
+    qs: ["疲れやすく、朝すっきり起きられない", "手足やお腹が冷えやすい", "食後に眠くなったり、だるくなったりする", "食欲にムラがある／胃もたれしやすい", "便がやわらかい、またはお腹をこわしやすい", "冷たい飲み物や生野菜をとると調子がくずれやすい",
+         "少し動いただけで汗をかいたり、息切れしたりする", "風邪をひきやすく、治るまでに時間がかかる", "舌のふちに歯のあとがついている", "月経の周期が早まりやすい、または出血がだらだら続く"] },
+  { key: "B", theme: "うるおいとほてりのこと", term: "陰虚", termSub: "", yomi: "いんきょ", nick: "からから・うるおい不足さん", group: "足りない",
+    state: "からだを潤し、熱をしずめる「陰」が不足している状態です。うるおいが足りないぶん熱がこもりやすく、乾燥やほてり、寝汗として表れやすくなります。がんばり過ぎや睡眠不足で、陰はさらに消耗しやすくなります。",
+    strength: "頭の回転が速く、行動力があります。",
+    policy: "滋陰（じいん）：うるおいを補い、こもった熱を落ち着かせる施術を行います。腎の陰を養うツボを中心に、刺激はおだやかにします。",
+    points: ["太渓", "照海", "湧泉"],
+    food: ["豆腐・豆乳", "白きくらげ・山芋", "梨・ぶどうなどの果物", "黒ごま・卵"],
+    living: ["日付が変わる前に布団に入る", "ゆっくり呼吸するストレッチ", "こまめな水分補給"],
+    less: ["長風呂・サウナ・ホットヨガで汗をかき過ぎること", "辛い物・お酒のとり過ぎ", "夜更かし"],
+    mind: "「休むことも妊活」です。予定を詰め込み過ぎないようにしましょう。",
+    qs: ["肌や髪、のど、目が乾燥しやすい", "手のひらや足の裏、顔がほてりやすい", "寝ているときに汗をかくことがある", "口がよく渇き、冷たい飲み物がほしくなる", "便がかたく、コロコロしやすい", "忙しくても動き続けてしまい、休むのが苦手",
+         "夕方になると、顔やからだがほてったり微熱っぽくなったりする", "寝つきが悪く、夢をよく見る", "腰や膝がだるい、または耳鳴りがある", "やせ型で、食べても太りにくい"] },
+  { key: "C", theme: "めぐる血と眠りのこと", term: "血虚", termSub: "肝血虚", yomi: "けっきょ／かんけっきょ", nick: "ふらふら・血の貯金不足さん", group: "足りない",
+    state: "からだを養う「血」が不足し、血をたくわえる「肝」の貯金が少なくなっている状態です。月経で血を失いやすい女性に多く、経血の少なさや目の疲れ、めまい、眠りの浅さとして表れやすくなります。",
+    strength: "繊細で感受性が豊か。細やかな気配りができます。",
+    policy: "補血養肝（ほけつようかん）：血を養い、肝の貯金を増やす施術を行います。血をつくる胃腸の働きも合わせて整えます。",
+    points: ["血海", "足三里", "太衝（やさしく）"],
+    food: ["ほうれん草・小松菜・にんじん", "黒豆・黒ごま・なつめ", "赤身の肉や魚・あさり", "卵"],
+    living: ["早寝（血は夜に養われるとされます）", "スマホを置いて目を休める", "足湯・やさしいストレッチ"],
+    less: ["夜更かし・寝る前のスマホ", "無理なダイエット", "目の使い過ぎ"],
+    mind: "不安なときは「ちゃんと休めた日」を記録して、安心につなげましょう。",
+    qs: ["経血の量が少ない、または月経が短めで終わる", "立ちくらみやめまいがある", "目が疲れやすい", "爪が割れやすい／髪がパサつく、抜けやすい", "足がつる（こむら返り）ことがある", "眠りが浅く、ささいなことで不安になりやすい",
+         "顔色が白っぽい、または唇や爪の色が薄い", "手足がしびれることがある", "月経のあとに、疲れやめまいが強くなる", "動悸がしたり、物忘れが増えたりする"] },
+  { key: "D", theme: "気持ちと月経周期のこと", term: "気滞", termSub: "肝気鬱結", yomi: "きたい／かんきうっけつ", nick: "もやもや・ストレスさん", group: "詰まっている",
+    state: "気の巡りをととのえる「肝」の働きが滞り、気が詰まっている状態です。ストレスやがまんの影響を受けやすく、月経前のイライラや張り、周期の乱れとして表れやすくなります。",
+    strength: "責任感が強く、情熱的。物事をきっちりこなせます。",
+    policy: "疏肝理気（そかんりき）：肝の気の巡りをよくして、張りやイライラをゆるめる施術を行います。胸やわき、首肩の緊張もほぐします。",
+    points: ["太衝", "膻中", "内関"],
+    food: ["春菊・セロリ・三つ葉・しそ", "みかん・ゆずなどの柑橘", "玉ねぎ・らっきょう", "ジャスミン茶・ミントティー"],
+    living: ["ウォーキングやダンスでリズムよく体を動かす", "胸やわきを伸ばすストレッチ・深呼吸", "柑橘やハーブの香りのお風呂"],
+    less: ["がまんしてため込むこと", "一日中座りっぱなし", "浅い呼吸のまま過ごすこと"],
+    mind: "好きなことで発散していいんです。ため息も、気を巡らせる自然な動きです。",
+    qs: ["月経前にイライラしたり、落ち込んだりしやすい", "月経前に胸やお腹が張る", "ため息が多いと言われる、または自分でも感じる", "月経の周期が乱れやすい（早まったり遅れたり）", "ストレスで食べ過ぎたり、食べられなくなったりする", "のどがつかえる感じや、お腹にガスがたまる感じがある",
+         "わき腹や胸のあたりが張って苦しいことがある", "気分によって体調が変わりやすい", "便秘と下痢をくり返しやすい", "月経が始まると、張りやイライラがすっと楽になる"] },
+  { key: "E", theme: "痛みとむくみのこと", term: "瘀血・痰湿", termSub: "", yomi: "おけつ・たんしつ", nick: "どろどろ・巡り不足さん", group: "詰まっている",
+    state: "血の巡りが滞る「瘀血」や、余分な水分がたまる「痰湿」がある状態です。冷えや座りっぱなし、胃腸の疲れなどで巡りが悪くなり、重い生理痛や経血のかたまり、むくみ・重だるさとして表れやすくなります。",
+    strength: "粘り強く我慢強い。どっしりと安定しています。",
+    policy: "活血化瘀・化痰利湿（かっけつかお・けたんりしつ）：血と水の巡りを助けて、痛みやむくみをやわらげる施術を行います。骨盤まわりと下半身を温めます。",
+    points: ["血海", "豊隆", "陰陵泉"],
+    food: ["黒豆・小豆", "玉ねぎ・ねぎ・にら", "青魚（いわし・さば）", "黒きくらげ・海藻"],
+    living: ["湯船でしっかり温まる・半身浴", "こまめに立ってふくらはぎを動かす", "骨盤まわりのストレッチ・軽く汗をかく運動"],
+    less: ["長時間同じ姿勢", "冷房で冷えたまま過ごすこと", "甘い物・脂っこい物のとり過ぎ"],
+    mind: "「巡ると軽くなる」を感じられると、続けるのが楽しくなります。",
+    qs: ["生理痛が重く、痛み止めが手放せない", "経血に、レバーのようなかたまりが混じる", "肩こりや頭痛がある", "目の下のクマ、肌のくすみやシミが気になる", "顔や足がむくみやすく、からだが重だるい", "おりものが多い、または甘い物・脂っこい物が好き",
+         "同じ場所がチクチク・ズキズキと痛むことがある", "経血の色が暗い、または黒っぽい", "雨の日や湿気の多い日に、からだが重くなる", "痰がからみやすい、または胃のあたりがつかえる感じがある"] },
+];
+const KIDNEY = {
+  policy: "補腎（ほじん）：どの証の方にも、命の土台をたくわえる「腎」を補う施術を合わせて行います。",
+  points: ["太渓", "湧泉", "関元"],
+  living: ["腰・お腹・足首を冷やさない", "睡眠時間をしっかり確保する", "働き過ぎに気をつける"],
+};
+// 05_資料/001_資料_周期カレンダー.md と同じ内容。院内用に「鍼灸では」を加えている
+const PHASES = [
+  { name: "月経期", days: "1〜7日目", len: 7, theme: "巡らせる", color: "p1",
+    body: "古い血をすっきり出す時期。疲れやすく、冷えると痛みが出やすくなります。",
+    shinkyu: "お腹と腰を温めて、巡りを助けます。",
+    life: "温かい汁物で内側から温め、がんばらず早めに休む。",
+    msg: "今週はゆっくりでいい" },
+  { name: "卵胞期", days: "8〜13日目", len: 6, theme: "たくわえる", color: "p2",
+    body: "血とうるおいを補い、卵を育てる時期。元気が戻り、気分も上向きに。",
+    shinkyu: "血とうるおいを補い、育てる力を支えます。",
+    life: "しっかり食べて「材料」をためる。少しずつ体を動かし始める。",
+    msg: "たくさん食べて、育てよう" },
+  { name: "排卵期", days: "14日目前後", len: 2, theme: "切り替える", color: "p3",
+    body: "低温から高温へ、陰から陽へバトンタッチする時期。",
+    shinkyu: "気の巡りを整えて、切り替えを助けます。",
+    life: "深呼吸やストレッチで、気持ちよく巡らせる。",
+    msg: "いいリズムで巡ってる" },
+  { name: "黄体期", days: "15〜28日目", len: 13, theme: "温める", color: "p4",
+    body: "高温期を保ち、赤ちゃんを迎える準備をする時期。むくみや張りが出やすくなります。",
+    shinkyu: "おだやかな刺激で温め、からだを守ります。",
+    life: "冷たい物は控えめに。甘い物はほどほどに、のんびりと。",
+    msg: "ぽかぽか、あったかく待とう" },
+];
+// 患者さんに見せる施術の説明。専門用語を使わない。full はメインの証、short はサブの証に使う
+const PLAIN = {
+  A: { full: "胃腸を元気にして、からだの中から温める力を育てる施術をしていきます。", short: "胃腸を元気にすること" },
+  B: { full: "からだにうるおいを補い、ほてりをやさしく落ち着かせる施術をしていきます。", short: "うるおいを補うこと" },
+  C: { full: "血を養って、からだに血の貯金をためていく施術をしていきます。", short: "血を養うこと" },
+  D: { full: "気の巡りをよくして、張りやもやもやをゆるめる施術をしていきます。", short: "気の巡りをよくすること" },
+  E: { full: "血や水の巡りを助けて、痛みやむくみを軽くしていく施術をしていきます。", short: "巡りを助けること" },
+  kidney: "そして、どなたにも大切な「からだの土台」を整えることも続けていきます。",
+};
+const STATUS = ["妊活を始めたところ", "タイミング法", "人工授精", "体外受精・顕微授精", "移植後", "その他"];
+const PACE = ["週2回", "週1回", "2週に1回", "月1回"];
+const TERM = ["1か月", "3か月", "6か月", "様子を見ながら相談"];
+const QN = 10;
+// 0 受付 / 1〜5 質問 / 6 施術者の確認 / 7 結果
+const STAFF_STEP = SECTIONS.length + 1, RESULT_STEP = SECTIONS.length + 2, TOTAL = RESULT_STEP + 1;
+
+let state, step;
+function fresh() {
+  state = {
+    name: "", date: new Date().toISOString().slice(0, 10), age: "", status: new Set(),
+    checks: SECTIONS.map(() => new Set()),
+    main: null, sub: null, policy: "", points: "", plain: "", pace: "週1回", term: "3か月",
+    termNote: "月経周期3回分（約3か月）を一区切りに、からだの変化を一緒に確かめていきます。", comment: "",
+  };
+  step = 0;
+}
+fresh();
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const byKey = (k) => SECTIONS.find((s) => s.key === k);
+const termFull = (s) => s.termSub ? `${s.term}（${s.termSub}）` : s.term;
+
+function counts() { return SECTIONS.map((s, i) => ({ ...s, n: state.checks[i].size })); }
+
+function judge() {
+  const cs = counts();
+  const max = Math.max(...cs.map((c) => c.n));
+  if (max === 0) return { main: [], sub: [], cs };
+  const main = cs.filter((c) => c.n === max);
+  const rest = cs.filter((c) => c.n < max && c.n > 0);
+  const second = rest.length ? Math.max(...rest.map((c) => c.n)) : 0;
+  const sub = second ? rest.filter((c) => c.n === second) : [];
+  return { main, sub, cs };
+}
+
+// 自動判定から施術者画面の初期値を決める。同数のときは先頭を選び、施術者が変えられる
+function autoPick() {
+  const { main, sub } = judge();
+  state.main = main.length ? main[0].key : null;
+  state.sub = main.length > 1 ? main[1].key : sub.length ? sub[0].key : null;
+  fillPlan();
+}
+
+function fillPlan() {
+  const m = state.main && byKey(state.main), s = state.sub && byKey(state.sub);
+  const lines = [];
+  if (m) lines.push(m.policy);
+  if (s) lines.push(`あわせて${termFull(s)}にも配慮し、${s.policy.split("：")[1]}`);
+  lines.push(KIDNEY.policy);
+  lines.push("排卵後〜黄体期や移植後は、強い刺激を避けておだやかに施術します。");
+  state.policy = lines.join("\n");
+  const pts = [...(m ? m.points : []), ...(s ? s.points.slice(0, 2) : []), ...KIDNEY.points];
+  state.points = [...new Set(pts)].join("、");
+  const plain = [];
+  if (m) plain.push(PLAIN[m.key].full);
+  if (s) plain.push(`あわせて、${PLAIN[s.key].short}も大切にします。`);
+  plain.push(PLAIN.kidney);
+  state.plain = plain.join("");
+}
+
+function render() {
+  const s = $("screen");
+  $("stepLabel").textContent = step === 0 ? "受付" : step <= SECTIONS.length ? `質問 ${step} / ${SECTIONS.length}` : step === STAFF_STEP ? "施術者の確認" : "結果";
+  $("progress").innerHTML = Array.from({ length: TOTAL }, (_, i) => `<span class="${i <= step ? "done" : ""}"></span>`).join("");
+  $("backBtn").disabled = step === 0;
+  $("nextBtn").textContent = step === 0 ? "質問をはじめる" : step < SECTIONS.length ? "次へ" : step === SECTIONS.length ? "回答を終える" : step === STAFF_STEP ? "患者さん用の結果を表示" : "次の方へ";
+
+  if (step === 0) s.innerHTML = intakeHTML();
+  else if (step <= SECTIONS.length) s.innerHTML = sectionHTML(step - 1);
+  else if (step === STAFF_STEP) s.innerHTML = staffHTML();
+  else s.innerHTML = resultHTML();
+  bind();
+  window.scrollTo({ top: 0 });
+}
+
+function intakeHTML() {
+  return `<div class="stack">
+    <div class="result-head">
+      <h2>今のからだの傾向を、いっしょに見ていきましょう</h2>
+      <p class="lead">50問に「当てはまる」ものをタップするだけ、5分ほどで終わります。診断ではなく、東洋医学の考え方でからだの傾向を知るための問診です。</p>
+    </div>
+    <div class="panel">
+      <div class="field">
+        <label for="fName">お名前<span class="opt">任意</span></label>
+        <input id="fName" type="text" autocomplete="off" value="${esc(state.name)}" placeholder="例：山田 花子">
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label for="fDate">ご来院日</label>
+          <input id="fDate" type="date" value="${esc(state.date)}">
+        </div>
+        <div class="field">
+          <label for="fAge">年齢<span class="opt">任意</span></label>
+          <input id="fAge" type="number" inputmode="numeric" min="15" max="60" value="${esc(state.age)}" placeholder="例：34">
+        </div>
+      </div>
+      <div class="field">
+        <span class="label" id="statusLbl">今の状況<span class="opt">当てはまるものをすべて</span></span>
+        <div class="chips" role="group" aria-labelledby="statusLbl">
+          ${STATUS.map((t) => `<button type="button" class="chip" data-status="${esc(t)}" aria-pressed="${state.status.has(t)}">${esc(t)}</button>`).join("")}
+        </div>
+      </div>
+    </div>
+    <p class="small">入力した内容はこの画面の中だけで使い、どこにも送信・保存されません。</p>
+  </div>`;
+}
+
+function sectionHTML(i) {
+  const sec = SECTIONS[i];
+  const set = state.checks[i];
+  return `<div class="stack">
+    <div class="result-head">
+      <span class="eyebrow">質問 ${i + 1} / ${SECTIONS.length}</span>
+      <h2>${esc(sec.theme)}</h2>
+    </div>
+    <p class="howto">ここ1〜2か月のからだを思い出して、当てはまるものをタップしてください。当てはまらなければ、そのまま次へ進んで大丈夫です。</p>
+    <div class="qs">
+      ${sec.qs.map((q, j) => `<button type="button" class="q" data-q="${j}" aria-pressed="${set.has(j)}">
+        <span class="box">${CHECK_SVG}</span><span class="txt">${esc(q)}</span></button>`).join("")}
+    </div>
+    <p class="count-note" id="countNote">当てはまる：${set.size} / ${QN}</p>
+  </div>`;
+}
+
+function barsHTML(cs) {
+  return `<div class="bars">${cs.map((c) => `<div class="bar-row" style="--tc: var(--${c.key})">
+      <span class="lbl">${esc(c.term)}</span>
+      <span class="track"><span class="fill" style="width:${(c.n / QN) * 100}%"></span></span>
+      <span class="n">${c.n}/${QN}</span></div>`).join("")}</div>`;
+}
+
+function staffHTML() {
+  const { cs, main } = judge();
+  const autoText = main.length ? `自動判定：メイン ${main.map((c) => c.term).join("・")}` : "自動判定：当てはまる項目なし";
+  const chip = (field, k, label) => `<button type="button" class="chip" data-pick="${field}" data-key="${k}" aria-pressed="${state[field] === k}">${esc(label)}</button>`;
+  return `<div class="stack staff-screen">
+    <div class="staff-banner">
+      <strong>施術者の方へ</strong>
+      <span>患者さんから iPad を受け取って、この画面で証と方針を確認してください。決めた内容が次の結果画面に出ます。</span>
+    </div>
+    <div class="panel">
+      <span class="eyebrow">回答の集計</span>
+      ${barsHTML(cs)}
+      <p class="small">${esc(autoText)}。脈・舌・お話の内容とあわせて、下で証を決めてください。</p>
+    </div>
+    <div class="panel">
+      <div class="field">
+        <span class="label" id="mainLbl">メインの証</span>
+        <div class="chips" role="group" aria-labelledby="mainLbl">${SECTIONS.map((s) => chip("main", s.key, termFull(s))).join("")}</div>
+      </div>
+      <div class="field">
+        <span class="label" id="subLbl">サブの証</span>
+        <div class="chips" role="group" aria-labelledby="subLbl">${chip("sub", "", "なし")}${SECTIONS.map((s) => chip("sub", s.key, termFull(s))).join("")}</div>
+      </div>
+      <p class="small">証を変えると、下の施術方針・ツボ・患者さんへの説明が書き直されます。</p>
+    </div>
+    <div class="panel">
+      <span class="eyebrow">先生だけが見る内容（結果画面には出ません）</span>
+      <div class="field">
+        <label for="fPolicy">施術方針</label>
+        <textarea id="fPolicy" rows="6">${esc(state.policy)}</textarea>
+      </div>
+      <div class="field">
+        <label for="fPoints">主に使うツボ<span class="opt">「、」で区切る</span></label>
+        <input id="fPoints" type="text" value="${esc(state.points)}">
+      </div>
+    </div>
+    <div class="panel">
+      <span class="eyebrow">患者さんに見せる内容</span>
+      <div class="field">
+        <label for="fPlain">施術の説明<span class="opt">専門用語を使わない言い方で</span></label>
+        <textarea id="fPlain" rows="3">${esc(state.plain)}</textarea>
+      </div>
+      <div class="field">
+        <span class="label" id="paceLbl">通院のペース</span>
+        <div class="chips" role="group" aria-labelledby="paceLbl">${PACE.map((p) => `<button type="button" class="chip" data-pace="${p}" aria-pressed="${state.pace === p}">${p}</button>`).join("")}</div>
+      </div>
+      <div class="field">
+        <span class="label" id="termLbl">通う期間</span>
+        <div class="chips" role="group" aria-labelledby="termLbl">${TERM.map((p) => `<button type="button" class="chip" data-term="${p}" aria-pressed="${state.term === p}">${p}</button>`).join("")}</div>
+      </div>
+      <div class="field">
+        <label for="fTermNote">期間についての説明</label>
+        <textarea id="fTermNote" rows="2">${esc(state.termNote)}</textarea>
+      </div>
+      <div class="field">
+        <label for="fComment">患者さんへのひとこと<span class="opt">任意</span></label>
+        <textarea id="fComment" rows="3" placeholder="例：冷えが落ち着いてきたら、次は月経前の張りを一緒に見ていきましょう。">${esc(state.comment)}</textarea>
+      </div>
+    </div>
+  </div>`;
+}
+
+function resultHTML() {
+  const m = state.main && byKey(state.main), s = state.sub && byKey(state.sub);
+  const treating = ["人工授精", "体外受精・顕微授精", "移植後"].some((t) => state.status.has(t));
+
+  const stateBlock = m ? `<div class="sho-card" style="--tc: var(--${m.key})">
+      <span class="role">あなたは今、こんなからだの状態です</span>
+      <span class="term">${esc(m.nick)}</span>
+      <span class="yomi">東洋医学では「${esc(termFull(m))}」といいます</span>
+      <p>${esc(m.state)}</p>
+      <p class="strength"><b>あなたの強み</b>　${esc(m.strength)}</p>
+      ${s ? `<div class="sub-line" style="--tc: var(--${s.key})"><span class="tag">あわせて見られる傾向</span><span class="t">${esc(s.nick)}</span><span class="small">${esc(s.state.split("。")[0])}。</span></div>` : ""}
+    </div>` : `<div class="panel"><span class="eyebrow">今のからだの状態</span><p>今回の問診では、大きな偏りは見られませんでした。土台となる腎のケアを続けていきましょう。</p></div>`;
+
+  const adv = (h, color, items) => `<div class="adv" style="--hc: var(--${color})"><span class="h">${h}</span><ul>${items.map((i) => `<li>${esc(i)}</li>`).join("")}</ul></div>`;
+  const adviceBlock = m ? `<div class="panel">
+      <span class="eyebrow">暮らしのアドバイス</span>
+      <div class="advice">
+        ${adv("おすすめの食材", m.key, m.food)}
+        ${adv("おすすめの過ごし方", m.key, m.living)}
+        ${adv("控えめにしたいこと", m.key, m.less)}
+        ${adv("全員共通の腎ケア", "K", KIDNEY.living)}
+      </div>
+      ${s ? `<p class="small">あわせて見られる「${esc(s.nick)}」の傾向には、${esc(s.food.slice(0, 2).join("、"))}などもおすすめです。</p>` : ""}
+      <p class="comment">${esc(m.mind)}</p>
+    </div>` : `<div class="panel"><span class="eyebrow">暮らしのアドバイス</span><div class="advice">${adv("全員共通の腎ケア", "K", KIDNEY.living)}</div></div>`;
+
+  return `<div class="stack">
+    <div class="result-head">
+      <span class="eyebrow">${esc(state.date)}${state.name ? `　${esc(state.name)} 様` : ""}</span>
+      <h2>問診の結果と、これからのこと</h2>
+    </div>
+    ${stateBlock}
+    <div class="panel">
+      <span class="eyebrow">これからの施術</span>
+      ${state.plain ? `<p class="pre">${esc(state.plain)}</p>` : ""}
+      ${state.comment ? `<p class="comment pre">${esc(state.comment)}</p>` : ""}
+      <div class="plan-grid">
+        <div class="plan-item"><span class="k">通院のペース</span><span class="v">${esc(state.pace)}</span></div>
+        <div class="plan-item"><span class="k">通う期間</span><span class="v">${esc(state.term)}</span></div>
+      </div>
+      ${state.termNote ? `<p>${esc(state.termNote)}</p>` : ""}
+    </div>
+    ${cycleHTML()}
+    ${adviceBlock}
+    ${treating ? `<p class="notice">治療中の方へ：ご自宅でのツボ押しや運動を始める前に、通院先の医師にご相談ください。移植後は、強い刺激のツボ押しは控えましょう。</p>` : ""}
+    <p class="small">この問診は病気の診断ではなく、東洋医学の考え方でからだの傾向を知るためのものです。からだの変化には個人差があります。体調に不安がある場合や治療中の方は、医師・専門家にご相談ください。</p>
+    <div class="panel no-print">
+      <span class="eyebrow">患者さんにお渡しする</span>
+      <div class="out-row">
+        ${canPrint ? `<button class="btn primary" id="printBtn" type="button">結果を印刷・PDFに保存</button>` : ""}
+        <button class="btn" id="copyPatientBtn" type="button">患者さん用の結果をコピー</button>
+        <span class="copied" id="copiedPatient" hidden>コピーしました</span>
+      </div>
+      <p class="small">${canPrint ? "印刷画面で「PDFに保存」を選ぶと、メールに添付できるファイルになります。" : "印刷ボタンは、GitHub Pages などに置いたページで表示されます。"}コピーした文章は、メールや LINE に貼り付けて送れます。施術者用まとめは、印刷やコピーには含まれません。</p>
+      <pre id="patientPre" class="staff-pre" hidden></pre>
+    </div>
+    <details class="panel staff">
+      <summary>施術者用まとめ（カルテ転記用）</summary>
+      <pre id="summary">${esc(summaryText())}</pre>
+      <div class="copy-row">
+        <button class="btn" id="copyBtn" type="button">まとめをコピー</button>
+        <span class="copied" id="copied" hidden>コピーしました</span>
+      </div>
+    </details>
+  </div>`;
+}
+
+// 28日を1周とする輪。月経期を12時の位置から時計回りに置き、黄体期の終わりから月経期へ矢印でつなぐ
+function ringSVG() {
+  const cx = 160, cy = 150, r = 96, lr = 132, gap = 1.6, total = 28;
+  const pt = (deg, rad) => [cx + rad * Math.cos((deg - 90) * Math.PI / 180), cy + rad * Math.sin((deg - 90) * Math.PI / 180)];
+  let a = 0, arcs = "", labels = "";
+  PHASES.forEach((p) => {
+    const sweep = (p.len / total) * 360, s = a + gap, e = a + sweep - gap;
+    const [x1, y1] = pt(s, r), [x2, y2] = pt(e, r);
+    arcs += `<path d="M${x1.toFixed(1)} ${y1.toFixed(1)} A${r} ${r} 0 ${e - s > 180 ? 1 : 0} 1 ${x2.toFixed(1)} ${y2.toFixed(1)}" style="fill:none;stroke:var(--${p.color});stroke-width:30"/>`;
+    const mid = a + sweep / 2, [lx, ly] = pt(mid, lr);
+    const anchor = Math.abs(lx - cx) < 12 ? "middle" : lx > cx ? "start" : "end";
+    labels += `<text x="${lx.toFixed(1)}" y="${(ly + 5).toFixed(1)}" text-anchor="${anchor}" font-size="14" font-weight="700" style="fill:var(--ink)">${p.name}</text>`;
+    a += sweep;
+  });
+  const [ax, ay] = pt(0, r);
+  const arrow = `<path d="M${ax - 7} ${ay - 11} L${ax + 6} ${ay} L${ax - 7} ${ay + 11} Z" style="fill:var(--ink)"/>`;
+  return `<svg class="ring" viewBox="0 0 320 300" role="img" aria-label="月経期・卵胞期・排卵期・黄体期がつながり、また月経期へ戻る28日の周期">
+    ${arcs}${arrow}${labels}
+    <text x="${cx}" y="${cy - 14}" text-anchor="middle" font-size="13" style="fill:var(--muted)">28日でひとめぐり</text>
+    <text x="${cx}" y="${cy + 12}" text-anchor="middle" font-size="19" font-weight="700" style="fill:var(--ink);font-family:var(--font-display)">どの日も</text>
+    <text x="${cx}" y="${cy + 36}" text-anchor="middle" font-size="19" font-weight="700" style="fill:var(--ink);font-family:var(--font-display)">大切な時間</text>
+  </svg>`;
+}
+
+function cycleHTML() {
+  const cards = PHASES.map((p) => `<div class="ph" style="--pc: var(--${p.color})">
+      <div class="nm"><b>${p.name}</b><span>${p.days}</span></div>
+      <span class="th">${p.theme}</span>
+      <dl>
+        <div><dt>からだの様子</dt><dd>${esc(p.body)}</dd></div>
+        <div><dt>鍼灸では</dt><dd>${esc(p.shinkyu)}</dd></div>
+        <div><dt>暮らしでは</dt><dd>${esc(p.life)}</dd></div>
+      </dl>
+      <span class="msg">${esc(p.msg)}</span>
+    </div>`).join("");
+  return `<div class="panel">
+    <span class="eyebrow">月経周期のめぐり</span>
+    <h3>月経から始まる4つの時期は、すべてつながっています</h3>
+    <div class="cycle-top">
+      ${ringSVG()}
+      <div class="cycle-bar">
+        <div class="seg">${PHASES.map((p) => `<div style="background: var(--${p.color})">${p.len > 2 ? p.name : "排卵"}</div>`).join("")}</div>
+        <div class="temp"><span>― 低温期 ―</span><span>切替</span><span>― 高温期 ―</span></div>
+        <p>月経期にからだをリセットし、卵胞期にたくわえ、排卵期に切り替えて、黄体期に温めて待つ。どこか1つの時期だけでなく、めぐり全体を整えていくことが大切です。</p>
+        <p class="small">日数は28日周期の目安です。周期の長さは人それぞれなので、基礎体温で自分のリズムを確かめてみましょう。</p>
+      </div>
+    </div>
+    <div class="phases">${cards}</div>
+    <p class="small">排卵期〜黄体期は、妊娠の可能性がある時期です。激しい運動や長時間の熱いお風呂は控えめに。治療中の方は、治療のスケジュールや医師の指示を優先してください。</p>
+    <div class="believe">
+      <p>からだは、ゆっくり変わっていきます。</p>
+      <p>変化は目に見えにくいけれど、月経期から黄体期まで、どの日もからだは次の準備をしています。</p>
+      <p>あきらめずに、自分のからだを信じて、鍼灸を続けていきましょう。</p>
+      <p class="last">その先の嬉しい出会いに向かって、一緒に進んでいきましょう。</p>
+    </div>
+  </div>`;
+}
+
+// claude.ai の中（枠の中）では印刷できないので、単独のページとして開いたときだけ印刷ボタンを出す
+const canPrint = (() => { try { return window.self === window.top; } catch (e) { return false; } })();
+
+function patientText() {
+  const m = state.main && byKey(state.main), s = state.sub && byKey(state.sub);
+  const L = [];
+  L.push(`妊活体質問診の結果（${state.date}）${state.name ? `　${state.name} 様` : ""}`);
+  L.push("");
+  if (m) {
+    L.push(`■ 今のからだの状態：${m.nick}（東洋医学では「${termFull(m)}」）`);
+    L.push(m.state);
+    L.push(`あなたの強み：${m.strength}`);
+    if (s) L.push(`あわせて見られる傾向：${s.nick}`);
+  } else {
+    L.push("■ 今のからだの状態：大きな偏りは見られませんでした。土台となる腎のケアを続けていきましょう。");
+  }
+  L.push("");
+  L.push("■ これからの施術");
+  if (state.plain) L.push(state.plain);
+  if (state.comment) L.push(state.comment);
+  L.push(`通院のペース：${state.pace}　通う期間：${state.term}`);
+  if (state.termNote) L.push(state.termNote);
+  L.push("");
+  L.push("■ 月経周期のめぐり（28日周期の目安）");
+  PHASES.forEach((p) => L.push(`・${p.name}（${p.days}）${p.theme}：${p.life}`));
+  L.push("");
+  L.push("■ 暮らしのアドバイス");
+  if (m) {
+    L.push(`おすすめの食材：${m.food.join("、")}`);
+    L.push(`おすすめの過ごし方：${m.living.join("、")}`);
+    L.push(`控えめにしたいこと：${m.less.join("、")}`);
+  }
+  L.push(`全員共通の腎ケア：${KIDNEY.living.join("、")}`);
+  if (m) L.push(m.mind);
+  L.push("");
+  L.push("からだは、ゆっくり変わっていきます。あきらめずに、自分のからだを信じて、鍼灸を続けていきましょう。その先の嬉しい出会いに向かって、一緒に進んでいきましょう。");
+  L.push("");
+  L.push("※この問診は病気の診断ではなく、東洋医学の考え方でからだの傾向を知るためのものです。体調に不安がある場合や治療中の方は、医師・専門家にご相談ください。");
+  return L.join("\n");
+}
+
+function selectEl(el) {
+  const r = document.createRange(); r.selectNodeContents(el);
+  const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);
+}
+
+function copyText(text, okId, onFail) {
+  const done = () => { $(okId).hidden = false; setTimeout(() => ($(okId).hidden = true), 2000); };
+  try { navigator.clipboard.writeText(text).then(done, onFail); } catch (e) { onFail(); }
+}
+
+function summaryText() {
+  const { cs } = judge();
+  const m = state.main && byKey(state.main), s = state.sub && byKey(state.sub);
+  const lines = [];
+  lines.push(`【妊活体質問診】${state.date || "日付未入力"}`);
+  lines.push(`氏名：${state.name || "（未記入）"}　年齢：${state.age || "（未記入）"}`);
+  lines.push(`状況：${state.status.size ? [...state.status].join("、") : "（未選択）"}`);
+  lines.push(`集計：${cs.map((c) => `${c.term}${c.n}`).join(" / ")}（各${QN}問）`);
+  lines.push(`メインの証：${m ? termFull(m) : "なし"}　サブの証：${s ? termFull(s) : "なし"}`);
+  lines.push(`施術方針：${state.policy.replace(/\n/g, " ")}`);
+  lines.push(`ツボ：${state.points}`);
+  lines.push(`通院：${state.pace}　通う期間：${state.term}`);
+  if (state.comment) lines.push(`ひとこと：${state.comment.replace(/\n/g, " ")}`);
+  lines.push("");
+  lines.push("該当項目：");
+  SECTIONS.forEach((sec, i) => {
+    const hit = [...state.checks[i]].sort((a, b) => a - b).map((j) => sec.qs[j]);
+    if (hit.length) lines.push(`${sec.term}）${hit.join("／")}`);
+  });
+  return lines.join("\n");
+}
+
+function bind() {
+  const on = (id, key) => { const el = $(id); if (el) el.oninput = () => (state[key] = el.value); };
+  on("fName", "name"); on("fDate", "date"); on("fAge", "age");
+  on("fPolicy", "policy"); on("fPoints", "points"); on("fPlain", "plain"); on("fTermNote", "termNote"); on("fComment", "comment");
+  document.querySelectorAll("[data-status]").forEach((b) => (b.onclick = () => {
+    const t = b.dataset.status;
+    state.status.has(t) ? state.status.delete(t) : state.status.add(t);
+    b.setAttribute("aria-pressed", state.status.has(t));
+  }));
+  document.querySelectorAll(".q").forEach((b) => (b.onclick = () => {
+    const set = state.checks[step - 1], j = +b.dataset.q;
+    set.has(j) ? set.delete(j) : set.add(j);
+    b.setAttribute("aria-pressed", set.has(j));
+    $("countNote").textContent = `当てはまる：${set.size} / ${QN}`;
+  }));
+  document.querySelectorAll("[data-pick]").forEach((b) => (b.onclick = () => {
+    const f = b.dataset.pick, k = b.dataset.key || null;
+    state[f] = k;
+    if (state.sub === state.main) state.sub = null;
+    fillPlan(); render();
+  }));
+  document.querySelectorAll("[data-pace]").forEach((b) => (b.onclick = () => { state.pace = b.dataset.pace; render(); }));
+  document.querySelectorAll("[data-term]").forEach((b) => (b.onclick = () => { state.term = b.dataset.term; render(); }));
+  const c = $("copyBtn");
+  if (c) c.onclick = () => copyText(summaryText(), "copied", () => selectEl($("summary")));
+  const cp = $("copyPatientBtn");
+  if (cp) cp.onclick = () => {
+    // コピーできない環境では文章を表示して、手で選んでもらう
+    const pre = $("patientPre");
+    pre.textContent = patientText();
+    copyText(pre.textContent, "copiedPatient", () => { pre.hidden = false; selectEl(pre); });
+  };
+  const pb = $("printBtn");
+  if (pb) pb.onclick = () => window.print();
+}
+
+$("nextBtn").onclick = () => {
+  if (step === RESULT_STEP) { $("confirm").hidden = false; $("cancelReset").focus(); return; }
+  if (step === SECTIONS.length) autoPick();
+  step++; render();
+};
+$("backBtn").onclick = () => { if (step > 0) { step--; render(); } };
+$("cancelReset").onclick = () => { $("confirm").hidden = true; };
+$("doReset").onclick = () => { $("confirm").hidden = true; fresh(); render(); };
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") $("confirm").hidden = true; });
+
+render();
+</script>
+</body>
+</html>
