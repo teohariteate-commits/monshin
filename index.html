@@ -25,8 +25,9 @@
   --A: #b7791f; --B: #2b7a8c; --C: #b8506a; --D: #4f8a3c; --E: #6b56a8; --K: #44546a;
   /* 月経周期の4期。05_資料/画像/src/03_cycle.html と同じ色 */
   --p1: #d9577a; --p2: #e98aa3; --p3: #f0a95b; --p4: #e8a917; --p-ink: #ffffff; --p-soft: #fbeef2;
-  --font-display: "Zen Maru Gothic", "Hiragino Maru Gothic ProN", "Yu Gothic", sans-serif;
-  --font-body: "BIZ UDPGothic", "Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif;
+  /* iPad・Mac は内蔵のヒラギノを先に使い、Web フォントを読み込まない（日本語の Web フォントは数百ファイルに分かれていて、iPad では重くなるため） */
+  --font-display: "Hiragino Maru Gothic ProN", "Zen Maru Gothic", "Yu Gothic", sans-serif;
+  --font-body: "Hiragino Sans", "BIZ UDPGothic", "Yu Gothic", "Meiryo", sans-serif;
   --radius: 14px;
 }
 @media (prefers-color-scheme: dark) {
@@ -49,6 +50,8 @@
 }
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
+/* すばやく続けてタップしても、画面が拡大されないようにする */
+button, a, input, textarea, summary { touch-action: manipulation; }
 body {
   margin: 0; background: var(--bg); color: var(--ink);
   font-family: var(--font-body); font-size: 17px; line-height: 1.7;
@@ -238,7 +241,21 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, summary:focus
   body { font-size: 11pt; padding: 0; }
   body::before, header.top, nav.bar, .no-print, details.staff, .confirm { display: none !important; }
   .wrap { max-width: none; padding: 0; }
-  .panel, .sho-card, .ph, .adv, .believe { break-inside: avoid; }
+  /* iPad の Safari は flex の中身をページの境目で切ってしまう（文字が上下に分かれる）。印刷では flex をやめて、ふつうの縦の並びにする */
+  .wrap, .stack, .panel, .sho-card, .believe, .result-head, .ph, .ph dl, .adv, .cycle-bar, .field { display: block; }
+  .eyebrow, .role, .term, .yomi, .ph .msg, .field .label { display: block; }
+  .ph .th { display: inline-block; }
+  .wrap > * + *, .stack > * + * { margin-top: 14px; }
+  .panel > * + *, .sho-card > * + *, .believe > * + *, .ph > * + *, .ph dl > * + *, .adv > * + *, .cycle-bar > * + *, .field > * + * { margin-top: 8px; }
+  .sho-card .yomi { margin-top: 2px; }
+  .panel, .sho-card, .ph, .adv, .believe, .notice, .field, .cycle-top { break-inside: avoid; page-break-inside: avoid; }
+  p { orphans: 3; widows: 3; }
+  .eyebrow, h2, h3 { break-after: avoid; page-break-after: avoid; }
+  /* iPad は枠をページの境目で分けることがあり、囲み線が途中で切れて見える。印刷では囲み線をやめて、上の線だけにする */
+  .panel { border: none; border-top: 1.5px solid var(--line); border-radius: 0; padding: 12px 0 0; }
+  .sho-card, .ph, .adv { border-left: none; border-right: none; border-bottom: none; border-radius: 0; padding: 10px 0 0; }
+  .sub-line { border: none; border-radius: 0; padding: 0; }
+  .believe, .notice { border-radius: 0; }
   .phases { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .advice { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .cycle-top { grid-template-columns: 220px minmax(0, 1fr); }
@@ -652,7 +669,8 @@ function ringSVG() {
   });
   const [ax, ay] = pt(0, r);
   const arrow = `<path d="M${ax - 7} ${ay - 11} L${ax + 6} ${ay} L${ax - 7} ${ay + 11} Z" style="fill:var(--ink)"/>`;
-  return `<svg class="ring" viewBox="0 0 320 300" role="img" aria-label="月経期・卵胞期・排卵期・黄体期がつながり、また月経期へ戻る28日の周期">
+  // 左右のラベル（黄体期など）が切れないように、横に余白をとる
+  return `<svg class="ring" viewBox="-30 0 380 300" role="img" aria-label="月経期・卵胞期・排卵期・黄体期がつながり、また月経期へ戻る28日の周期">
     ${arcs}${arrow}${labels}
     <text x="${cx}" y="${cy - 14}" text-anchor="middle" font-size="13" style="fill:var(--muted)">28日でひとめぐり</text>
     <text x="${cx}" y="${cy + 12}" text-anchor="middle" font-size="19" font-weight="700" style="fill:var(--ink);font-family:var(--font-display)">どの日も</text>
